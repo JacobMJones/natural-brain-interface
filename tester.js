@@ -11,15 +11,14 @@ const createEmptyJson = (name, content) => {
 }
 
 const saveClassifier = filename => {
-    return new Promise((resolve, reject) => {
-        classifier.save(filename, (err, classifier) => {
-            if (err) {
-                reject(err)
-                return
-            }
-            resolve(classifier)
-        })
+    classifier.save(filename, (err, classifier) => {
+        if (err) {
+            reject(err)
+            return
+        }
+        resolve(classifier)
     })
+
 }
 
 const loadClassifier = (filename, cb) => {
