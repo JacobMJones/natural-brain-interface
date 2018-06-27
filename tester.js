@@ -2,15 +2,17 @@ var BrainJSClassifier = require("natural-brain");
 const fs = require('fs');
 var sw = require('./stopwords.js');
 
-const createEmptyJson = (name) => {
-
+const createClassifier = (name) => {
     typeof name === 'string' ? fs.writeFileSync(`${name}.json`, '') : console.log('create file failed')
     let file = `${name}.json`;
-    //saveClassifier(file)
+    const classifier = new BrainJSClassifier();
+    classifier.addDocument("Pizza is tasty", "positive");
+    classifier.train();
+    saveClassifier(file, classifier);
 }
 
 const saveClassifier = (filename, classifier) => {
-
+    console.log('in save', classifier);
     classifier.save(filename, (err, classifier) => {
         if (err) {
             reject(err)
@@ -30,14 +32,14 @@ const testCB = (error, classifier) => {
     //console.log("The food was good\n", classifier.getClassifications("The food was good"));
     //console.log("The candy was not bad\n", classifier.getClassifications("The food was not good not bad"));
 };
-
-const addSingleDocument = (content, sentiment) => {
+//currying: const addSingleDocument = (content, sentiment) => (error, classifier) => {
+const addSingleDocument = (error, classifier, content, sentiment) => {
     console.log('in add single', content, sentiment);
     content = removeStopWords(content);
     dataObject = {};
     dataObject.content = content;
     dataObject.sentiment = sentiment;
-    addDataSet([dataObject]);
+    addDataSet([dataObject], classifier);
 }
 const prepareDataSet = (error, classifier) => {
     var parsedArray = fs.readFileSync('yelp.txt').toString().split("\n");;
@@ -56,6 +58,7 @@ const prepareDataSet = (error, classifier) => {
         match[2] == 1 ? dataObject.sentiment = 'positive' : dataObject.sentiment = 'negative';
         finalArray.push(dataObject);
     }
+    console.log("classifer in prepare dataset");
     addDataSet(finalArray, classifier);
 }
 
@@ -111,10 +114,11 @@ const start = (argv) => {
         case 'set':
             loadClassifier(argv[3], testCB);
         case 'one':
-            loadClassifier(argv[3], addSingleDocument(argv[4], argv[5]));
+            loadClassifier(argv[3], (error, classifier) => addSingleDocument(error, classifier, argv[4], argv[5]));
+            // currying: loadClassifier(argv[3], addSingleDocument(argv[4], argv[5]));
             break;
         case 'new':
-            createEmptyJson(argv[3]);
+            createClassifier(argv[3]);
             break;
     }
 }
