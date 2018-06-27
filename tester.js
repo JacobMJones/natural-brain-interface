@@ -6,8 +6,9 @@ let stopWords = ['i', 'is', 'be', 'am', 'this', 'restaurant', 'are', 'was', 'wil
     'there', 'ours', 'our', 'ought', 'other', 'or', 'only', 'once', 'on', 'off', 'myself', 'most', 'more', 'let', 'its',
     'how', 'her', 'his', 'him', 'he', 'she', 'for', 'few', 'had', 'each', '.', 'being', 'could', 'should'
 ];
-const createEmptyJson = (name, content) => {
-    typeof name === 'string' ? fs.writeFileSync(`${name}.json`, `${content}`) : console.log('create file failed')
+const createEmptyJson = (name) => {
+    typeof name === 'string' ? fs.writeFileSync(`${name}.json`, '') : console.log('create file failed')
+
 }
 
 const saveClassifier = filename => {
@@ -16,9 +17,8 @@ const saveClassifier = filename => {
             reject(err)
             return
         }
-        resolve(classifier)
+        console.log('classifier', classifier);
     })
-
 }
 
 const loadClassifier = (filename, cb) => {
@@ -26,9 +26,10 @@ const loadClassifier = (filename, cb) => {
 };
 
 const testCB = (error, classifier) => {
-    console.log("The candy was bad\n", classifier.getClassifications("The candy was bad"));
-    console.log("The food was good\n", classifier.getClassifications("The food was good"));
-    console.log("The candy was not bad\n", classifier.getClassifications("The food was not good not bad"));
+    console.log(classifier);
+    //console.log("The candy was bad\n", classifier.getClassifications("The candy was bad"));
+    //console.log("The food was good\n", classifier.getClassifications("The food was good"));
+    //console.log("The candy was not bad\n", classifier.getClassifications("The food was not good not bad"));
 };
 
 const addSingleDocument = (content, sentiment) => {
@@ -42,7 +43,7 @@ const addSingleDocument = (content, sentiment) => {
 const prepareDataSet = (dataSet) => {
     var parsedArray = fs.readFileSync(dataSet).toString().split("\n");;
     finalArray = [];
-    for (var i = 0; i < 70; i++) {
+    for (var i = 0; i < 2; i++) {
         console.log(i);
         let dataPoint = parsedArray[i];
         let match = dataPoint.match(/(.*)\s(0|1)$/)
@@ -99,7 +100,7 @@ const addDataSet = (dataSet) => {
 const start = (argv) => {
     const command = argv[2];
     switch (command) {
-        case 'new':
+        case 'many':
             console.log('in new');
             prepareDataSet('yelp.txt');
             break;
@@ -107,11 +108,14 @@ const start = (argv) => {
             loadClassifier('classifier.json', testCB);
             break;
         case 'add':
-            loadClassifier('classifier.json', retrainClassifier)
+            loadClassifier('classifier.json', retrainClassifier);
             break;
 
         case 'one':
-            loadClassifier('classifier.json', addSingleDocument(argv[3], argv[4]))
+            loadClassifier('classifier.json', addSingleDocument(argv[3], argv[4]));
+            break;
+        case 'new':
+            createEmptyJson(argv[3]);
             break;
     }
 }
