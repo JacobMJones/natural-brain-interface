@@ -1,13 +1,16 @@
 var BrainJSClassifier = require("natural-brain");
-var classifier = new BrainJSClassifier();
 const fs = require('fs');
 var sw = require('./stopwords.js');
 
 const createEmptyJson = (name) => {
+
     typeof name === 'string' ? fs.writeFileSync(`${name}.json`, '') : console.log('create file failed')
+    let file = `${name}.json`;
+    //saveClassifier(file)
 }
 
-const saveClassifier = filename => {
+const saveClassifier = (filename, classifier) => {
+
     classifier.save(filename, (err, classifier) => {
         if (err) {
             reject(err)
@@ -23,7 +26,7 @@ const loadClassifier = (filename, cb) => {
 
 const testCB = (error, classifier) => {
     console.log(classifier);
-    //console.log("The candy was bad\n", classifier.getClassifications("The candy was bad"));
+    console.log("The candy was bad\n", classifier.getClassifications("The candy was bad"));
     //console.log("The food was good\n", classifier.getClassifications("The food was good"));
     //console.log("The candy was not bad\n", classifier.getClassifications("The food was not good not bad"));
 };
@@ -36,10 +39,10 @@ const addSingleDocument = (content, sentiment) => {
     dataObject.sentiment = sentiment;
     addDataSet([dataObject]);
 }
-const prepareDataSet = (dataSet) => {
-    var parsedArray = fs.readFileSync(dataSet).toString().split("\n");;
+const prepareDataSet = (error, classifier) => {
+    var parsedArray = fs.readFileSync('yelp.txt').toString().split("\n");;
     finalArray = [];
-    for (var i = 0; i < 2; i++) {
+    for (var i = 0; i < 40; i++) {
         console.log(i);
         let dataPoint = parsedArray[i];
         let match = dataPoint.match(/(.*)\s(0|1)$/)
@@ -53,11 +56,10 @@ const prepareDataSet = (dataSet) => {
         match[2] == 1 ? dataObject.sentiment = 'positive' : dataObject.sentiment = 'negative';
         finalArray.push(dataObject);
     }
-    addDataSet(finalArray);
+    addDataSet(finalArray, classifier);
 }
 
 const removeStopWords = (content) => {
-
 
     return content.split(' ').filter(word => sw.stops().indexOf(word.toLowerCase()) == -1).join(' ');
 }
@@ -78,17 +80,17 @@ const retrainClassifier = (error, classifier) => {
     classifier.retrain();
     saveClassifier('classifier.json')
 }
-const addDataSet = (dataSet) => {
-
+const addDataSet = (dataSet, classifier) => {
+    console.log('add data classififer', classifier)
     console.time();
     dataSet.forEach(function(item) {
         classifier.addDocument(item.content, item.sentiment);
     });
     console.timeEnd();
     console.time();
-    classifier.train();
+    classifier.retrain();
     console.timeEnd();
-    saveClassifier('classifier.json');
+    saveClassifier('classifier.json', classifier);
 }
 
 //add to test
@@ -98,10 +100,10 @@ const start = (argv) => {
     switch (command) {
         case 'many':
             console.log('in new');
-            prepareDataSet('yelp.txt');
+            loadClassifier(argv[3], prepareDataSet);
             break;
         case 'test':
-            loadClassifier('classifier.json', testCB);
+            loadClassifier(argv[3], testCB);
             break;
         case 'add':
             loadClassifier('classifier.json', retrainClassifier);
@@ -109,7 +111,7 @@ const start = (argv) => {
         case 'set':
             loadClassifier(argv[3], testCB);
         case 'one':
-            loadClassifier('classifier.json', addSingleDocument(argv[3], argv[4]));
+            loadClassifier(argv[3], addSingleDocument(argv[4], argv[5]));
             break;
         case 'new':
             createEmptyJson(argv[3]);
