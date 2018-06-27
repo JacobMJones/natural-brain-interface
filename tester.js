@@ -1,14 +1,10 @@
 var BrainJSClassifier = require("natural-brain");
 var classifier = new BrainJSClassifier();
 const fs = require('fs');
+var sw = require('./stopwords.js');
 
-let stopWords = ['i', 'is', 'be', 'am', 'this', 'restaurant', 'are', 'was', 'will', 'were', 'than', 'that', 'then',
-    'there', 'ours', 'our', 'ought', 'other', 'or', 'only', 'once', 'on', 'off', 'myself', 'most', 'more', 'let', 'its',
-    'how', 'her', 'his', 'him', 'he', 'she', 'for', 'few', 'had', 'each', '.', 'being', 'could', 'should'
-];
 const createEmptyJson = (name) => {
     typeof name === 'string' ? fs.writeFileSync(`${name}.json`, '') : console.log('create file failed')
-
 }
 
 const saveClassifier = filename => {
@@ -63,7 +59,7 @@ const prepareDataSet = (dataSet) => {
 const removeStopWords = (content) => {
 
 
-    return content.split(' ').filter(word => stopWords.indexOf(word.toLowerCase()) == -1).join(' ');
+    return content.split(' ').filter(word => sw.stops().indexOf(word.toLowerCase()) == -1).join(' ');
 }
 
 function is_in_array(s, your_array) {
@@ -110,7 +106,8 @@ const start = (argv) => {
         case 'add':
             loadClassifier('classifier.json', retrainClassifier);
             break;
-
+        case 'set':
+            loadClassifier(argv[3], testCB);
         case 'one':
             loadClassifier('classifier.json', addSingleDocument(argv[3], argv[4]));
             break;
