@@ -33,18 +33,18 @@ const testCB = (error, classifier) => {
     //console.log("The candy was not bad\n", classifier.getClassifications("The food was not good not bad"));
 };
 //currying: const addSingleDocument = (content, sentiment) => (error, classifier) => {
-const addSingleDocument = (error, classifier, content, sentiment) => {
+const addSingleDocument = (error, classifier, content, sentiment, file) => {
     console.log('in add single', content, sentiment);
     content = removeStopWords(content);
     dataObject = {};
     dataObject.content = content;
     dataObject.sentiment = sentiment;
-    addDataSet([dataObject], classifier);
+    addDataSet([dataObject], classifier, file);
 }
-const prepareDataSet = (error, classifier) => {
+const addManyDocuments = (error, classifier, file) => {
     var parsedArray = fs.readFileSync('yelp.txt').toString().split("\n");;
     finalArray = [];
-    for (var i = 0; i < 40; i++) {
+    for (var i = 100; i < 200; i++) {
         console.log(i);
         let dataPoint = parsedArray[i];
         let match = dataPoint.match(/(.*)\s(0|1)$/)
@@ -59,7 +59,7 @@ const prepareDataSet = (error, classifier) => {
         finalArray.push(dataObject);
     }
     console.log("classifer in prepare dataset");
-    addDataSet(finalArray, classifier);
+    addDataSet(finalArray, classifier, file);
 }
 
 const removeStopWords = (content) => {
@@ -83,7 +83,7 @@ const retrainClassifier = (error, classifier) => {
     classifier.retrain();
     saveClassifier('classifier.json')
 }
-const addDataSet = (dataSet, classifier) => {
+const addDataSet = (dataSet, classifier, file) => {
     console.log('add data classififer', classifier)
     console.time();
     dataSet.forEach(function(item) {
@@ -93,7 +93,7 @@ const addDataSet = (dataSet, classifier) => {
     console.time();
     classifier.retrain();
     console.timeEnd();
-    saveClassifier('classifier.json', classifier);
+    saveClassifier(file, classifier);
 }
 
 //add to test
@@ -103,7 +103,8 @@ const start = (argv) => {
     switch (command) {
         case 'many':
             console.log('in new');
-            loadClassifier(argv[3], prepareDataSet);
+            // loadClassifier(argv[3], prepareDataSet);
+            loadClassifier(argv[3], (error, classifier) => addManyDocuments(error, classifier, argv[3]));
             break;
         case 'test':
             loadClassifier(argv[3], testCB);
@@ -114,7 +115,7 @@ const start = (argv) => {
         case 'set':
             loadClassifier(argv[3], testCB);
         case 'one':
-            loadClassifier(argv[3], (error, classifier) => addSingleDocument(error, classifier, argv[4], argv[5]));
+            loadClassifier(argv[3], (error, classifier) => addSingleDocument(error, classifier, argv[4], argv[5], argv[3]));
             // currying: loadClassifier(argv[3], addSingleDocument(argv[4], argv[5]));
             break;
         case 'new':
