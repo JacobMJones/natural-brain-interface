@@ -2,6 +2,10 @@ var BrainJSClassifier = require("natural-brain");
 const fs = require('fs');
 var sw = require('./stopwords.js');
 
+const CLASSIFIER_OPTIONS = {
+
+};
+
 const createClassifier = (name) => {
     typeof name === 'string' ? fs.writeFileSync(`${name}.json`, '') : console.log('create file failed')
     let file = `${name}.json`;
@@ -26,7 +30,7 @@ const loadClassifier = (filename, cb) => {
     BrainJSClassifier.load(filename, null, null, cb);
 };
 
-const testCB = (error, classifier) => {
+const testCB = (error, classifier, file) => {
     console.log(classifier);
     console.log("The candy was bad\n", classifier.getClassifications("The candy was bad"));
     //console.log("The food was good\n", classifier.getClassifications("The food was good"));
@@ -44,7 +48,7 @@ const addSingleDocument = (error, classifier, content, sentiment, file) => {
 const addManyDocuments = (error, classifier, file) => {
     var parsedArray = fs.readFileSync('yelp.txt').toString().split("\n");;
     finalArray = [];
-    for (var i = 100; i < 200; i++) {
+    for (var i = 501; i < 600; i++) {
         console.log(i);
         let dataPoint = parsedArray[i];
         let match = dataPoint.match(/(.*)\s(0|1)$/)
@@ -58,7 +62,7 @@ const addManyDocuments = (error, classifier, file) => {
         match[2] == 1 ? dataObject.sentiment = 'positive' : dataObject.sentiment = 'negative';
         finalArray.push(dataObject);
     }
-    console.log("classifer in prepare dataset");
+    // console.log("final array", finalArray);
     addDataSet(finalArray, classifier, file);
 }
 
@@ -107,7 +111,7 @@ const start = (argv) => {
             loadClassifier(argv[3], (error, classifier) => addManyDocuments(error, classifier, argv[3]));
             break;
         case 'test':
-            loadClassifier(argv[3], testCB);
+            loadClassifier(argv[3], (error, classifier) => testCB(error, classifier, argv[3]));
             break;
         case 'add':
             loadClassifier('classifier.json', retrainClassifier);
